@@ -6,7 +6,6 @@
 #define MAX_CLNT 256
 #define BUF_SIZE 100
 
-
 #pragma comment(lib,"WS2_32.lib")
 
 void error_handling(const char* msg);
@@ -26,10 +25,9 @@ bool is_pwd_null = true;
 int main()
 {
 
-	// 初始化WS2_32.dll
 	WSADATA wsaData;
 	WORD sockVersion = MAKEWORD(2, 2);
-	WSAStartup(sockVersion, &wsaData);	//使用2.2個socket版本
+	WSAStartup(sockVersion, &wsaData);
 
 	g_hEvent = CreateEvent(NULL, FALSE, TRUE, NULL);
 
@@ -115,98 +113,150 @@ DWORD WINAPI ThreadProc(LPVOID lpParam)
 	{
 		
 		while(is_authed == false){
-			while(is_pwd_null){
-				while(is_name_null){
-					while(is_first_time){
-						if(msg[0] == 'y'){
-							msg[BUF_SIZE] = NULL; //清空buffer
-							msg[BUF_SIZE] = recv(clnt_sock, msg, sizeof(msg), 0);
-							strcpy(name, msg);
-							printf("name=%s\n", name);
-							if(name != NULL){
-								FILE *fptr;
-								fptr = fopen("Users.txt","a");
-								char *content;
-								if(fptr){
-									fprintf(fptr,"\n%s", name);
-									fclose(fptr);
-								}
-								is_first_time = false;
-							}
-							
-						}
-						if(msg[0] == 'Y'){
-							msg[BUF_SIZE] = NULL; //清空buffer
-							msg[BUF_SIZE] = recv(clnt_sock, msg, sizeof(msg), 0);
-							strcpy(name, msg);
-							printf("name=%s\n", name);
-							if(name != NULL){
-								FILE *fptr;
-								fptr = fopen("Users.txt","a");
-								char *content;
-								if(fptr){
-									fprintf(fptr,"\n%s", name);
-									fclose(fptr);
-								}
-								is_first_time = false;
-							}
-						}
-						if(msg[0] == 'n'){
-							// send_msg(msg, str_len);
-							msg[BUF_SIZE] = NULL;
-							msg[BUF_SIZE] = recv(clnt_sock, msg, sizeof(msg), 0);
-							printf("name=%s\n", msg);
-							if(name != NULL){
-								FILE *fptr;
-								fptr = fopen("Users.txt","r");
-								char *content;
-								if(fptr){
-									int i, line;
-									while(*content = fgetc(fptr) != EOF){
-										if(*content == '\n'){
-											line++;
-										}
-									}
-									for(i=0;i<line;i++){
-										fscanf(fptr,"%[^\n]", content);
-										fscanf(fptr,"%s", &name);
-									
-									}
-									
-
-									printf("name:%s\n", name);
-									fclose(fptr);
-								}
-								is_first_time = false;
-							}
-						}
-						if(msg[0] == 'N'){
-							// send_msg(msg, str_len);
-							msg[BUF_SIZE] = NULL;
-							msg[BUF_SIZE] = recv(clnt_sock, msg, sizeof(msg), 0);
-							printf("name=%s\n", msg);
-							is_first_time = false;
-						}
+			while(is_first_time){
+				if(msg[0] == 'y'){
 					msg[BUF_SIZE] = NULL; //清空buffer
-					is_name_null = false;
+					msg[BUF_SIZE] = recv(clnt_sock, msg, sizeof(msg), 0);
+					strcpy(name, msg);
+					printf("name:%s\n", name);
+					if(name != NULL){
+						FILE *fptr;
+						fptr = fopen("Users.txt","a");
+						if(fptr){
+							fprintf(fptr,"%s\n", name);
+							fclose(fptr);
+						}
 					}
-
-					// send_msg(msg, str_len);
-					// printf("msg=%s\n", msg);
-					// is_authed = true;
+					msg[BUF_SIZE] = NULL; //清空buffer
+					msg[BUF_SIZE] = recv(clnt_sock, msg, sizeof(msg), 0);
+					strcpy(pwd, msg);
+					printf("pwd:%s\n", pwd);
+					if(pwd != NULL){
+						FILE *fptr;
+						fptr = fopen("Pwd.txt","a");
+						if(fptr){
+							fprintf(fptr,"%s\n", pwd);
+							fclose(fptr);
+						}
+						is_first_time = false;
+					}
 				}
-				
-			pwd[30] = recv(clnt_sock, msg, sizeof(msg), 0);
-			strcpy(pwd, msg);
-			printf("Pwd:%s\n", pwd);
-			is_pwd_null = false;
+				if(msg[0] == 'Y'){
+					msg[BUF_SIZE] = NULL; //清空buffer
+					msg[BUF_SIZE] = recv(clnt_sock, msg, sizeof(msg), 0);
+					strcpy(name, msg);
+					printf("name:%s\n", name);
+					if(name != NULL){
+						FILE *fptr;
+						fptr = fopen("Users.txt","a");
+						if(fptr){
+							fprintf(fptr,"%s\n", name);
+							fclose(fptr);
+						}
+					}
+					msg[BUF_SIZE] = NULL; //清空buffer
+					msg[BUF_SIZE] = recv(clnt_sock, msg, sizeof(msg), 0);
+					strcpy(pwd, msg);
+					printf("pwd:%s\n", pwd);
+					if(pwd != NULL){
+						FILE *fptr;
+						fptr = fopen("Pwd.txt","a");
+						if(fptr){
+							fprintf(fptr,"%s\n", pwd);
+							fclose(fptr);
+						}
+						is_first_time = false;
+					}
+				}
+				if(msg[0] == 'n'){
+					msg[BUF_SIZE] = NULL;
+					msg[BUF_SIZE] = recv(clnt_sock, msg, sizeof(msg), 0);
+					strcpy(name, msg);
+					printf("name:%s\n", name);
+					// 若名稱不為空白
+					if(name != NULL){
+						FILE *fptr;
+						fptr = fopen("Users.txt","r");
+						char *content = NULL;
+						size_t len = 0;
+						// 從檔案驗證使用者名稱
+						if(fptr){
+							while(getline(&content, &len, fptr) != -1){
+								printf("%s", content);
+								if(strcmp(name, content) == 0){
+									printf("User name authenticated\n");
+									break;
+								}
+							}
+							fclose(fptr);
+							free(content);
+						}
+						strcpy(msg, "Failed");
+						send(clnt_sock, msg, sizeof(msg), 0);
+					}
+				}
+				if(msg[0] == 'N'){
+					msg[BUF_SIZE] = NULL;
+					msg[BUF_SIZE] = recv(clnt_sock, msg, sizeof(msg), 0);
+					strcpy(name, msg);
+					printf("name:%s\n", name);
+					// 若名稱不為空白
+					if(name != NULL){
+						FILE *fptr;
+						fptr = fopen("Users.txt","r");
+						char *content;
+						size_t len = 0;
+						// 從檔案驗證使用者名稱
+						if(fptr){
+							while(getline(&content, &len, fptr) != -1){
+								printf("%s", content);
+								if(strcmp(name, content) == 0){
+									printf("User name authenticated\n");
+									break;
+								}
+							}
+							fclose(fptr);
+							free(content);
+						}
+					}
+					msg[BUF_SIZE] = NULL; //清空buffer
+					msg[BUF_SIZE] = recv(clnt_sock, msg, sizeof(msg), 0);
+					strcpy(pwd, msg);
+					printf("pwd:%s\n", pwd);
+					if(pwd != NULL){
+						FILE *fptr;
+						fptr = fopen("Pwd.txt","r");
+						char *content = NULL;
+						size_t len = 0;
+						// 從檔案驗證使用者密碼
+						if(fptr){
+							while(getline(&content, &len, fptr)){
+								// printf("pwd:%s, content:%s\n", pwd, content);
+								if(strcmp(pwd, content) == 0){
+									
+									printf("content:%s\n", content);
+									printf("User password authenticated\n");
+									break;
+								}
+							}
+							fclose(fptr);
+							free(content);
+						}
+						strcpy(msg, "Failed");
+						send(clnt_sock, msg, sizeof(msg), 0);
+					}
+						
+						is_first_time = false;
+					}
 			}
-
 			is_authed = true;
+		strcpy(msg, "connect success");
+		send(clnt_sock, msg, sizeof(msg), 0);
 		}
 		send_msg(msg, str_len);
 		printf("%s\n", msg);
-	}
+}
+
 	printf("Client exit:%d\n", GetCurrentThreadId());
 
 	WaitForSingleObject(g_hEvent, INFINITE);

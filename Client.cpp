@@ -61,7 +61,7 @@ int main()
 		is_authed = true;
 		}
 
-	printf("connect success\n");
+	// printf("connect success\n");
 	hThread[0] = CreateThread(
 		NULL,
 		NULL,
